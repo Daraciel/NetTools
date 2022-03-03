@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NetTools
 {
@@ -9,7 +10,7 @@ namespace NetTools
         /// <summary>
         /// inner ArrayList object
         /// </summary>
-        protected ArrayList _innerArray;
+        protected ICollection<T> _innerCollection;
 
         /// <summary>
         /// flag for setting collection to read-only mode (not used in this example)
@@ -19,25 +20,16 @@ namespace NetTools
 
         public Deck()
         {
-            _innerArray = new ArrayList();
+            _innerCollection = new List<T>();
         }
 
-        /// <summary>
-        /// Default accessor for the collection 
-        /// </summary>
-        /// <param name="index">searched item index</param>
-        /// <returns>an object at selected position</returns>
-        public virtual T this[int index]
+        protected Deck(ICollection<T> collection)
         {
-            get
-            {
-                return (T)_innerArray[index];
-            }
-            set
-            {
-                _innerArray[index] = value;
-            }
+            // Let derived classes specify the exact type of ICollection<T> to wrap.
+            _innerCollection = collection;
         }
+
+        #region ICollection
 
         /// <summary>
         /// /¡Number of elements in the collection
@@ -46,7 +38,7 @@ namespace NetTools
         {
             get
             {
-                return _innerArray.Count;
+                return _innerCollection.Count;
             }
         }
 
@@ -64,61 +56,28 @@ namespace NetTools
         // Add a business object to the collection
         public virtual void Add(T newObject)
         {
-            _innerArray.Add(newObject);
+            _innerCollection.Add(newObject);
         }
-        // Remove first instance of a business object from the collection 
-        public virtual bool Remove(T BusinessObject)
+        public bool Remove(T item)
         {
-            bool result = false;
-
-            //loop through the inner array's indices
-            for (int i = 0; i < _innerArray.Count; i++)
-            {
-                //store current index being checked
-                T obj = (T)_innerArray[i];
-
-                //compare the BusinessObjectBase UniqueId property
-                if (obj.UniqueId == BusinessObject.UniqueId)
-                {
-                    //remove item from inner ArrayList at index i
-                    _innerArray.RemoveAt(i);
-                    result = true;
-                    break;
-                }
-            }
-
-            return result;
+            return _innerCollection.Remove(item);
         }
 
-        // Returns true/false based on whether or not it finds
-        // the requested object in the collection.
-        public bool Contains(T BusinessObject)
+        public bool Contains(T item)
         {
-            //loop through the inner ArrayList
-            foreach (T obj in _innerArray)
-            {
-                //compare the BusinessObjectBase UniqueId property
-                if (obj.UniqueId == BusinessObject.UniqueId)
-                {
-                    //if it matches return true
-                    return true;
-                }
-            }
-            //no match
-            return false;
+            return _innerCollection.Contains(item);
         }
 
         // Copy objects from this collection into another array
-        public virtual void CopyTo(T[] BusinessObjectArray, int index)
+        public virtual void CopyTo(T[] array, int index)
         {
-            throw new Exception(
-              "This Method is not valid for this implementation.");
+            _innerCollection.CopyTo(array, index);
         }
 
         // Clear the collection of all it's elements
         public virtual void Clear()
         {
-            _innerArray.Clear();
+            _innerCollection.Clear();
         }
 
         // Returns custom generic enumerator for this BusinessObjectCollection
@@ -126,14 +85,39 @@ namespace NetTools
         {
             //return a custom enumerator object instantiated
             //to use this BusinessObjectCollection 
-            return new BusinessObjectEnumerator<T>(this);
+            return _innerCollection.GetEnumerator();
         }
 
         // Explicit non-generic interface implementation for IEnumerable
         // extended and required by ICollection (implemented by ICollection<T>)
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return new BusinessObjectEnumerator<T>(this);
+            return _innerCollection.GetEnumerator();
+        }
+
+
+        #endregion
+
+        public void Shuffle()
+        {
+
+        }
+
+        public T Draw()
+        {
+            T result = null;
+
+            if(_innerCollection != null)
+            {
+                result = _innerCollection.First();
+
+                if(result != null)
+                {
+                    _innerCollection.Remove(result);
+                }
+            }
+
+            return result;
         }
     }
 }
