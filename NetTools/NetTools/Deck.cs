@@ -7,6 +7,8 @@ namespace NetTools
 {
     public class Deck<T> : ICollection<T> where T : class
     {
+        protected Random _rnd;
+
         /// <summary>
         /// inner ArrayList object
         /// </summary>
@@ -17,10 +19,14 @@ namespace NetTools
         /// </summary>
         protected bool _IsReadOnly;
 
+        protected List<T> _collection;
+
 
         public Deck()
         {
+            _rnd = new Random();
             _innerCollection = new List<T>();
+            _collection = _innerCollection as List<T>;
         }
 
         protected Deck(ICollection<T> collection)
@@ -100,21 +106,91 @@ namespace NetTools
 
         public void Shuffle()
         {
+            int rnd_start_position = 0;
+            int rnd_end_position = 0;
+            int collectionCount = 0;
+            T auxStorage = null;
+            //Do Shuffling
+            if(_collection != null)
+            {
+                collectionCount = _collection.Count;
+                if(collectionCount > 0)
+                {
+                    for (int i = 0; i <= collectionCount; i++)
+                    {
+                        rnd_start_position = _rnd.Next(0, collectionCount);
+                        rnd_end_position = _rnd.Next(0, collectionCount);
 
+                        auxStorage = _collection.ElementAt(rnd_start_position);
+                        _collection[rnd_start_position] = _collection.ElementAt(rnd_end_position);
+                        _collection[rnd_end_position] = auxStorage;
+                    }
+                }
+            }
+
+            Cut();
+        }
+
+        public void Cut()
+        {
+            IEnumerable<T> top = null;
+            int placeToCut = 0;
+
+            placeToCut = _rnd.Next(0, _collection.Count);
+            top = _collection.Take(placeToCut);
+            _collection.RemoveRange(0, placeToCut);
+            _collection.AddRange(top);
+        }
+
+
+        public T Seek()
+        {
+            T result = null;
+
+            if (_collection != null)
+            {
+                result = _collection.First();
+            }
+
+            return result;
         }
 
         public T Draw()
         {
             T result = null;
 
-            if(_innerCollection != null)
-            {
-                result = _innerCollection.First();
+            result = Seek();
 
-                if(result != null)
-                {
-                    _innerCollection.Remove(result);
-                }
+            if (result != null)
+            {
+                _collection.Remove(result);
+            }
+
+            return result;
+        }
+
+
+        public IEnumerable<T> Seek(int amount)
+        {
+            IEnumerable<T> result = null;
+
+            if (_collection != null)
+            {
+                result = _collection.Take(amount);
+            }
+
+            return result;
+        }
+
+        public IEnumerable<T> Draw(int amount)
+        {
+            IEnumerable<T> result = null;
+
+            result = Seek(amount);
+
+            if (result != null)
+            {
+                _collection.RemoveRange(0, amount);
             }
 
             return result;
