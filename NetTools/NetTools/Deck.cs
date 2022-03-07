@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace NetTools
 {
-    public class Deck<T> : ICollection<T> where T : class
+    public class Deck<T> : ICollection<T>
     {
         protected Random _rnd;
 
@@ -22,17 +22,38 @@ namespace NetTools
         protected List<T> _collection;
 
 
-        public Deck()
+        public Deck() : this(null, null)
         {
-            _rnd = new Random();
-            _innerCollection = new List<T>();
             _collection = _innerCollection as List<T>;
         }
 
-        protected Deck(ICollection<T> collection)
+        public Deck(Random rnd) : this(rnd, null)
         {
-            // Let derived classes specify the exact type of ICollection<T> to wrap.
-            _innerCollection = collection;
+            _collection = _innerCollection as List<T>;
+        }
+
+
+        public Deck(int seed) : this(null, null, seed)
+        {
+            _collection = _innerCollection as List<T>;
+        }
+
+
+        protected Deck(Random rnd = null, ICollection<T> collection = null, int? seed = null)
+        {
+            if(rnd != null)
+            {
+                _rnd = rnd;
+            }
+            else if(seed != null)
+            {
+                _rnd =  new Random(seed.Value);
+            }
+            else
+            {
+                _rnd = new Random();
+            }
+            _innerCollection = collection ?? new List<T>();
         }
 
         #region ICollection
@@ -109,7 +130,8 @@ namespace NetTools
             int rnd_start_position = 0;
             int rnd_end_position = 0;
             int collectionCount = 0;
-            T auxStorage = null;
+            T auxStorage;
+
             //Do Shuffling
             if(_collection != null)
             {
@@ -137,7 +159,7 @@ namespace NetTools
             int placeToCut = 0;
 
             placeToCut = _rnd.Next(0, _collection.Count);
-            top = _collection.Take(placeToCut);
+            top = _collection.Take(placeToCut).ToList();
             _collection.RemoveRange(0, placeToCut);
             _collection.AddRange(top);
         }
@@ -145,19 +167,13 @@ namespace NetTools
 
         public T Seek()
         {
-            T result = null;
 
-            if (_collection != null)
-            {
-                result = _collection.First();
-            }
-
-            return result;
+            return _collection.First();
         }
 
         public T Draw()
         {
-            T result = null;
+            T result;
 
             result = Seek();
 
