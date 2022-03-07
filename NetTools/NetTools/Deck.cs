@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NetTools.Interfaces;
+using NetTools.ShufflingStrategy;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,10 +23,13 @@ namespace NetTools
 
         protected List<T> _collection;
 
+        protected IShufflingStrategy<T> _shuffler;
+
 
         public Deck() : this(null, null)
         {
             _collection = _innerCollection as List<T>;
+            _shuffler = new BasicShufflingStrategy<T>();
         }
 
         public Deck(Random rnd) : this(rnd, null)
@@ -127,28 +132,7 @@ namespace NetTools
 
         public void Shuffle()
         {
-            int rnd_start_position = 0;
-            int rnd_end_position = 0;
-            int collectionCount = 0;
-            T auxStorage;
-
-            //Do Shuffling
-            if(_collection != null)
-            {
-                collectionCount = _collection.Count;
-                if(collectionCount > 0)
-                {
-                    for (int i = 0; i <= collectionCount; i++)
-                    {
-                        rnd_start_position = _rnd.Next(0, collectionCount);
-                        rnd_end_position = _rnd.Next(0, collectionCount);
-
-                        auxStorage = _collection.ElementAt(rnd_start_position);
-                        _collection[rnd_start_position] = _collection.ElementAt(rnd_end_position);
-                        _collection[rnd_end_position] = auxStorage;
-                    }
-                }
-            }
+            _innerCollection = _shuffler.Shuffle(_innerCollection.ToArray());
 
             Cut();
         }
